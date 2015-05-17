@@ -18,6 +18,8 @@
 #include "SerialCommunication.h"
 #include "arduino_driver.h"
 
+//#include "geometry_msgs/Quaternion.h"
+
 using namespace std;
 using namespace ros;
 
@@ -35,6 +37,7 @@ static const string TURRET_COMMAND_TOPIC = "turret_command";
 static const string ESTOP_TOPIC = "eStop";
 static const string ROBOT_STATE_TOPIC = "robot_state";
 static const string GPS_STATE_TOPIC = "gps_state";
+//static const string Quaternion_TOPIC = "quaternion"
 
 static const string INIT_STRING = "BG";
 static const char IDENTIFIER_BYTE = 'B';
@@ -85,10 +88,12 @@ int main(int argc, char** argv)
 	
 	Publisher robot_state = n.advertise<sb_msgs::RobotState>(ROBOT_STATE_TOPIC,1);
 	Publisher gps_state = n.advertise<std_msgs::String>(GPS_STATE_TOPIC,1);
+	//Publisher quaternion = n.advertise<std_msgs::String>(Quaternion_TOPIC,1);
 	
 	sb_msgs::IMU imu;
 	sb_msgs::RobotState state;
 	std_msgs::String gps_data;
+	std_msg::quaternion rotation;
 	
 	ROS_INFO("arduino_driver ready");
 	//mech.twist_x=125;
@@ -172,6 +177,7 @@ void processState(string data,sb_msgs::RobotState &state)
 //tf update
 void processHeading(string data,sb_msgs::RobotState &state)//http://docs.ros.org/indigo/api/geometry_msgs/html/msg/Quaternion.html
 {
+	//http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	state.x.push_back(data[0] << 8|data[1]);
 	state.y.push_back(data[2] << 8|data[3]);
 	state.z.push_back(data[4] << 8|data[5]);
