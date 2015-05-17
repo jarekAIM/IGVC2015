@@ -44,7 +44,7 @@ static const int SECOND = 1000000;
 //global variables
 ServoControl servo;
 MechControl mech;
-char twist_x[3]={'1','2','5'};
+//char twist_x[3]={'1','2','5'};
 char twist_y[3]={'1','2','5'};
 char twist_z[3]={'1','2','5'};
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	std_msgs::String gps_data;
 	
 	ROS_INFO("arduino_driver ready");
-	mech.twist_x=125;
+	//mech.twist_x=125;
 	mech.twist_y=125;
 	mech.twist_z=125;
 
@@ -112,23 +112,26 @@ int main(int argc, char** argv)
 	    if (eStop)
 	    {	
 			cout << "eStop on" << endl;
-			ss << (char)IDENTIFIER_BYTE << "125125125";
+			ss << (char)IDENTIFIER_BYTE << "125125";
 	    } else {  
             //use carCommand and turretCommand
-			ss << (char)IDENTIFIER_BYTE << twist_x[0] << twist_x[1] << twist_x[2] << twist_y[0] << twist_y[1] << twist_y[2] << twist_z[0] << twist_z[1] << twist_z[2];
+			ss << (char)IDENTIFIER_BYTE << twist_y[0] << twist_y[1] << twist_y[2] << twist_z[0] << twist_z[1] << twist_z[2];
 
 	    }
-	    link.writeData(ss.str(), 10);
+	    link.writeData(ss.str(), 7);
 	    
 	    //delay for sync
 	    usleep(20000);
 	    
 	    //publish data
-	    robot_state.publish(state);
+	    link.readData(38);//not 38
 	    
-	    gps_data.data = link.readData(38);
-	    cout << "GPS DATA " << gps_data.data << endl; // print out gps datas
-	    gps_state.publish(gps_data);
+	    robot_state.publish(state);//TODO update state
+	    //publish tf message
+	    
+	    //gps_data.data = link.readData(38);
+	    //cout << "GPS DATA " << gps_data.data << endl; // print out gps datas
+	    //gps_state.publish(gps_data);
 	    
 	    //clear buffer (MAY NOT WORK)
 	    link.clearBuffer();
@@ -156,6 +159,23 @@ void processData(string data,sb_msgs::RobotState &state)
 	state.ir.push_back(data[6] << 8|data[7]);
 	state.ir.push_back(data[8] << 8|data[9]);
 	state.num_analog = (int)state.ir.size();
+}
+
+//robot state update
+void processState(string data,sb_msgs::RobotState &state)
+{
+	state.Vright.push_back(data[0] << 8|data[1]);
+	state.Vleft.push_back(data[2] << 8|data[3]);
+	state.compass.push_back(data[4] << 8|data[5]);
+}
+
+//tf update
+void processHeading(string data,sb_msgs::RobotState &state)//http://docs.ros.org/indigo/api/geometry_msgs/html/msg/Quaternion.html
+{
+	state.x.push_back(data[0] << 8|data[1]);
+	state.y.push_back(data[2] << 8|data[3]);
+	state.z.push_back(data[4] << 8|data[5]);
+	state.w.push_back(data[6] << 8|data[7]);
 }
 
 //car_command_callback
