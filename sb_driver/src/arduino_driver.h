@@ -37,6 +37,8 @@ struct MechControl
     int twist_z;
 };
 void processData(string data, sb_msgs::RobotState &state);
+void processState(string data,sb_msgs::RobotState &state);
+void processHeading(string data,sb_msgs::RobotState &state);
 
 /*
  car_command_callback function
